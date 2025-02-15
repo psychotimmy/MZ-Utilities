@@ -3,4 +3,4 @@ Utility programs to help with Sharp MZ series emulators and preservation activit
 
 To compile: cc -o \<executable name\> \<source\>.c
 
-**mzfview** - Examine the header of a mzf/m12/mzt digital tape file from an MZ series computer.
+**mzfview** - Examine the header and body of a mzf/m12/mzt digital tape file from an MZ series computer.
