@@ -11,7 +11,7 @@
 #include <string.h>
 
 #define MZFHEADERSIZE 128         /* Size of a .mzf file header in bytes */
-#define DISPLAYLEN     20
+#define DISPLAYLEN     16
 
 /* Convert Sharp 'ASCII' to a printable 'ASCII' character */
 /* Incomplete coverage, but good enough for most purposes */
@@ -19,10 +19,8 @@ uint8_t mzascii2ascii(uint8_t sharpchar)
 {
   uint8_t asciichar=0x2d; /* Default anything not in if or switch to a dash */
 
-  /* # $ % & ' ( ) 0-9 and A-Z are ok, contiguous & have a true ASCII value */
-  if (((sharpchar >= 0x23) && (sharpchar <= 0x29)) ||
-      ((sharpchar >= 0x30) && (sharpchar <= 0x39)) ||
-      ((sharpchar >= 0x41) && (sharpchar <= 0x5a))) 
+  /* ! " # $ % & ' ( ) 0-9 and A-Z are ok, contiguous & have a true ASCII value */
+  if ((sharpchar >= 0x20) && (sharpchar <= 0x5a))
     asciichar=sharpchar;
   else
     switch(sharpchar) {
@@ -83,31 +81,6 @@ uint8_t mzascii2ascii(uint8_t sharpchar)
       case 0xa2: asciichar=0x7a; //z
                  break;
 
-      /* <Space>, ! and @ are also ok */
-
-      case 0x20: asciichar=0x20; // <Space>
-                 break;
-      case 0x21: asciichar=0x21; // !
-                 break;
-      case 0x40: asciichar=0x40; // @
-                 break;
-
-      /* German characters are ok */
-  
-      case 0xa8: asciichar=0x99; // O+umlaut
-                 break;
-      case 0xad: asciichar=0x81; // u+umlaut
-                 break;
-      case 0xae: asciichar=0xe1; // eszett
-                 break;
-      case 0xb2: asciichar=0x9a; // U+umlaut
-                 break;
-      case 0xb9: asciichar=0x8e; // A+umlaut
-                 break;
-      case 0xba: asciichar=0x94; // o+umlaut
-                 break;
-      case 0xbb: asciichar=0x84; // a+umlaut
-                 break;
     }
 
   return(asciichar);
@@ -177,15 +150,33 @@ uint16_t process_mzf_header(FILE *fp, char *mzf)
 
 void process_mzf_body(FILE *fp, uint16_t fs)
 {
-  uint16_t i;
-  uint8_t c;
+  int32_t i;
+  uint8_t body[fs];
 
-  printf("\nFile body in hexadecimal\n");
-  printf("------------------------\n\n");
+  printf("\nFile body in hexadecimal and ASCII\n");
+  printf("----------------------------------\n\n");
+  for (i=0;i<fs;i++)
+    body[i]=getc(fp);
+
   for (i=0;i<fs;i++) {
-    printf("%02x ",getc(fp));
-    if ((i+1)%DISPLAYLEN==0)
+    printf("%02x ",body[i]);
+    if ((i+1)%DISPLAYLEN==0) {
+      printf("    ");
+      for (uint8_t j=DISPLAYLEN;j>0;j--) 
+        printf("%c",mzascii2ascii(body[(i-j)+1]));
       printf("\n");
+    }
+  }
+
+  if (fs%DISPLAYLEN!=0) {
+    int32_t j=i;
+    while ((j++)%DISPLAYLEN!=0) 
+      printf("   ");
+    while (i%DISPLAYLEN!=0)
+      --i;
+    printf("    ");
+    for (j=i;j<fs;j++)
+      printf("%c",mzascii2ascii(body[j]));
   }
 
   printf("\n");
