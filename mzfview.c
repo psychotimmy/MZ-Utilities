@@ -11,7 +11,7 @@
 #include <string.h>
 
 #define MZFHEADERSIZE 128         /* Size of a .mzf file header in bytes */
-#define DISPLAYLEN     16
+#define DISPLAYLEN     20
 
 /* Convert Sharp 'ASCII' to a printable 'ASCII' character */
 /* Incomplete coverage, but good enough for most purposes */
@@ -113,7 +113,7 @@ uint8_t mzascii2ascii(uint8_t sharpchar)
   return(asciichar);
 }
 
-void process_mzf_header(FILE *fp, char *mzf)
+uint16_t process_mzf_header(FILE *fp, char *mzf)
 {
   uint8_t header[MZFHEADERSIZE];
   uint16_t i;
@@ -128,7 +128,7 @@ void process_mzf_header(FILE *fp, char *mzf)
     printf("=");
   printf("\n\nFile type: 0x%02x",header[0]);
   switch (header[0]) {
-    case 0x01: printf("   machine code\n");
+    case 0x01: printf(" - machine code\n");
                break;
     case 0x02: printf(" - MZ-80 BASIC or other high level language\n");
                break;
@@ -172,11 +172,23 @@ void process_mzf_header(FILE *fp, char *mzf)
   }
 
   printf("\n");
-  return;
+  return(((header[19]<<8)&0xff00)|header[18]);
 }
 
-void process_mzf_body(FILE *fp)
+void process_mzf_body(FILE *fp, uint16_t fs)
 {
+  uint16_t i;
+  uint8_t c;
+
+  printf("\nFile body in hexadecimal\n");
+  printf("------------------------\n\n");
+  for (i=0;i<fs;i++) {
+    printf("%02x ",getc(fp));
+    if ((i+1)%DISPLAYLEN==0)
+      printf("\n");
+  }
+
+  printf("\n");
   return;
 }
 
@@ -184,6 +196,7 @@ int main(int argc, char **argv)
 {
 
   FILE *fp;
+  uint16_t filesize;
 
   /* Check we have one and only one argument */
   if (argc !=2) {
@@ -201,10 +214,10 @@ int main(int argc, char **argv)
   }
 
   /* Read contents of file header and process it */
-  process_mzf_header(fp,argv[1]);
+  filesize=process_mzf_header(fp,argv[1]);
 
   /* Read contents of file body and process it */
-  process_mzf_body(fp);
+  process_mzf_body(fp,filesize);
 
   /* Tidy up */
   fclose(fp);
