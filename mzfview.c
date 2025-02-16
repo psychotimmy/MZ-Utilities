@@ -8,87 +8,337 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <string.h>
 
 #define MZFHEADERSIZE 128         /* Size of a .mzf file header in bytes */
 #define DISPLAYLEN     16
 
-/* Convert Sharp 'ASCII' to a printable 'ASCII' character */
-/* Incomplete coverage, but good enough for most purposes */
-uint8_t mzascii2ascii(uint8_t sharpchar)
-{
-  uint8_t asciichar=0x2d; /* Default anything not in if or switch to a dash */
+uint8_t header[MZFHEADERSIZE];    /* Store header globally */
 
-  /* ! " # $ % & ' ( ) 0-9 and A-Z are ok, contiguous & have a true ASCII value */
-  if ((sharpchar >= 0x20) && (sharpchar <= 0x5a))
-    asciichar=sharpchar;
+/* Print Sharp 'ASCII' to stdout */
+void mzascii2utf8(uint8_t sharpchar)
+{
+  if ((sharpchar >= 0x20) && (sharpchar <= 0x5d))
+    printf("%c",sharpchar);
   else
     switch(sharpchar) {
 
       /* Sharp lower case letters are all ok */
       /* but are not contiguous ... convert  */
 
-      case 0xa1: asciichar=0x61; //a
+      case 0xa1: printf("a"); //a
                  break;
-      case 0x9a: asciichar=0x62; //b
+      case 0x9a: printf("b"); //b
                  break;
-      case 0x9f: asciichar=0x63; //c
+      case 0x9f: printf("c"); //c
                  break;
-      case 0x9c: asciichar=0x64; //d
+      case 0x9c: printf("d"); //d
                  break;
-      case 0x92: asciichar=0x65; //e
+      case 0x92: printf("e"); //e
                  break;
-      case 0xaa: asciichar=0x66; //f
+      case 0xaa: printf("f"); //f
                  break;
-      case 0x97: asciichar=0x67; //g
+      case 0x97: printf("g"); //g
                  break;
-      case 0x98: asciichar=0x68; //h
+      case 0x98: printf("h"); //h
                  break;
-      case 0xa6: asciichar=0x69; //i
+      case 0xa6: printf("i"); //i
                  break;
-      case 0xaf: asciichar=0x6a; //j
+      case 0xaf: printf("j"); //j
                  break;
-      case 0xa9: asciichar=0x6b; //k
+      case 0xa9: printf("k"); //k
                  break;
-      case 0xb8: asciichar=0x6c; //l
+      case 0xb8: printf("l"); //l
                  break;
-      case 0xb3: asciichar=0x6d; //m
+      case 0xb3: printf("m"); //m
                  break;
-      case 0xb0: asciichar=0x6e; //n
+      case 0xb0: printf("n"); //n
                  break;
-      case 0xb7: asciichar=0x6f; //o
+      case 0xb7: printf("o"); //o
                  break;
-      case 0x9e: asciichar=0x70; //p
+      case 0x9e: printf("p"); //p
                  break;
-      case 0xa0: asciichar=0x71; //q
+      case 0xa0: printf("q"); //q
                  break;
-      case 0x9d: asciichar=0x72; //r
+      case 0x9d: printf("r"); //r
                  break;
-      case 0xa4: asciichar=0x73; //s
+      case 0xa4: printf("s"); //s
                  break;
-      case 0x96: asciichar=0x74; //t
+      case 0x96: printf("t"); //t
                  break;
-      case 0xa5: asciichar=0x75; //u
+      case 0xa5: printf("u"); //u
                  break;
-      case 0xab: asciichar=0x76; //v
+      case 0xab: printf("v"); //v
                  break;
-      case 0xa3: asciichar=0x77; //w
+      case 0xa3: printf("w"); //w
                  break;
-      case 0x9b: asciichar=0x78; //x
+      case 0x9b: printf("x"); //x
                  break;
-      case 0xbd: asciichar=0x79; //y
+      case 0xbd: printf("y"); //y
                  break;
-      case 0xa2: asciichar=0x7a; //z
+      case 0xa2: printf("z"); //z
                  break;
 
+      /* Other stuff - mostly graphics */
+
+      case 0x5e: printf("\u2191"); // upwards arrow 
+                 break;
+      case 0x5f: printf("\u2190"); // leftwards arrow
+                 break;
+      case 0x7b: printf("\u00b0"); // degree symbol
+                 break;
+      case 0xad: printf("\u00fc"); // u+umlaut 
+                 break;
+      case 0xae: printf("\u00df"); // eszet
+                 break;
+      case 0xba: printf("\u00f6"); // o+umlaut
+                 break;
+      case 0xbb: printf("\u00e4"); // a+umlaut
+                 break;
+      case 0xbe: printf("\u00a5"); // yen
+                 break;
+      case 0xc6: printf("\u2192"); // rightwards arrow
+                 break;
+      case 0xe1: printf("\u2660"); // spade
+                 break;
+      case 0xf3: printf("\u2665"); // heart
+                 break;
+      case 0xf8: printf("\u2663"); // club
+                 break;
+      case 0xfa: printf("\u2666"); // diamond
+                 break;
+      case 0xfb: printf("£");      // £
+                 break;
+      case 0xfc: printf("\u2193"); // downwards arrow
+                 break;
+      case 0xff: printf("\u03c0"); // pi
+                 break;
+
+      /* Clear, Home, arrow keys */
+      case 0x11: printf("\u21a1"); // cursor down
+                 break;
+      case 0x16: printf("\u239a"); // clear screen
+                 break;
+
+      /* For other control codes 0x00 - 0x1f */
+      default:   printf("~");
+                 break;
     }
 
-  return(asciichar);
+  return;
+}
+
+void print5025(uint8_t *body, uint16_t fs)
+{
+  bool instr=false;
+  uint8_t licount=0;
+  uint8_t linum[4];
+
+  printf("\n\n");
+
+  for (int32_t i=0;i<fs;i++) {
+    if ((body[i]==0x0d)&&(licount==4)) {
+      licount=0;
+      instr=false;
+      printf("\n");
+    }
+    else if (instr) {
+      mzascii2utf8(body[i]);
+      if (body[i]==0x22)
+        instr=false;
+    }
+    else if (licount < 4) {
+      linum[licount++]=body[i];
+      if (licount == 4) {
+        uint16_t linenumber=((linum[3]<<8)|linum[2])&0xffff;
+        printf(" %d ",linenumber);
+      }
+    }
+    else {
+      switch(body[i]) {
+      case 0x22: instr=true;
+                   printf("%c",body[i]);
+                   break;
+        case 0x80: printf("REM");
+                   break;
+        case 0x81: printf("DATA");
+                   break;
+        case 0x82: printf("LIST");
+                   break;
+        case 0x83: printf("RUN");
+                   break;
+        case 0x84: printf("NEW");
+                   break;
+        case 0x85: printf("PRINT");
+                   break;
+        case 0x86: printf("LET");
+                   break;
+        case 0x87: printf("FOR");
+                   break;
+        case 0x88: printf("IF");
+                   break;
+        case 0x89: printf("GOTO");
+                   break;
+        case 0x8a: printf("READ");
+                   break;
+        case 0x8b: printf("GOSUB");
+                   break;
+        case 0x8c: printf("RETURN");
+                   break;
+        case 0x8d: printf("NEXT");
+                   break;
+        case 0x8e: printf("STOP");
+                   break;
+        case 0x8f: printf("END");
+                   break;
+        case 0x90: printf("ON");
+                   break;
+        case 0x91: printf("LOAD");
+                   break;
+        case 0x92: printf("SAVE");
+                   break;
+        case 0x93: printf("VERIFY");
+                   break;
+        case 0x94: printf("POKE");
+                   break;
+        case 0x95: printf("DIM");
+                   break;
+        case 0x96: printf("DEF FN");
+                   break;
+        case 0x97: printf("INPUT");
+                   break;
+        case 0x98: printf("RESTORE");
+                   break;
+        case 0x99: printf("CLR");
+                   break;
+        case 0x9a: printf("MUSIC");
+                   break;
+        case 0x9b: printf("TEMPO");
+                   break;
+        case 0x9c: printf("USR(");
+                   break;
+        case 0x9d: printf("WOPEN");
+                   break;
+        case 0x9e: printf("ROPEN");
+                   break;
+        case 0x9f: printf("CLOSE");
+                   break;
+        case 0xa0: printf("BYE");
+                   break;
+        case 0xa1: printf("LIMIT");
+                   break;
+        case 0xa2: printf("CONT");
+                   break;
+        case 0xa3: printf("SET");
+                   break;
+        case 0xa4: printf("RESET");
+                   break;
+        case 0xa5: printf("GET");
+                   break;
+        case 0xa6: printf("INP#");
+                   break;
+        case 0xa7: printf("OUT#");
+                   break;
+        case 0xad: printf("THEN");
+                   break;
+        case 0xae: printf("TO");
+                   break;
+        case 0xaf: printf("STEP");
+                   break;
+        case 0xb0: printf("><");
+                   break;
+        case 0xb1: printf("<>");
+                   break;
+        case 0xb2: printf("=<");
+                   break;
+        case 0xb3: printf("<=");
+                   break;
+        case 0xb4: printf("=>");
+                   break;
+        case 0xb5: printf(">=");
+                   break;
+        case 0xb6: printf("=");
+                   break;
+        case 0xb7: printf(">");
+                   break;
+        case 0xb8: printf("<");
+                   break;
+        case 0xb9: printf("AND");
+                   break;
+        case 0xba: printf("OR");
+                   break;
+        case 0xbb: printf("NOT");
+                   break;
+        case 0xbc: printf("+");
+                   break;
+        case 0xbd: printf("-");
+                   break;
+        case 0xbe: printf("*");
+                   break;
+        case 0xbf: printf("/");
+                   break;
+        case 0xc0: printf("LEFT$(");
+                   break;
+        case 0xc1: printf("RIGHT$(");
+                   break;
+        case 0xc2: printf("MID$(");
+                   break;
+        case 0xc3: printf("LEN(");
+                   break;
+        case 0xc4: printf("CHR$(");
+                   break;
+        case 0xc5: printf("STR$(");
+                   break;
+        case 0xc6: printf("ASC(");
+                   break;
+        case 0xc7: printf("VAL(");
+                   break;
+        case 0xc8: printf("PEEK(");
+                   break;
+        case 0xc9: printf("TAB(");
+                   break;
+        case 0xca: printf("SPC(");
+                   break;
+        case 0xcb: printf("SIZE");
+                   break;
+        case 0xcf: printf("\u2191"); // up arrow = exponentiation
+                   break;
+        case 0xd0: printf("RND(");
+                   break;
+        case 0xd1: printf("SIN(");
+                   break;
+        case 0xd2: printf("COS(");
+                   break;
+        case 0xd3: printf("TAN(");
+                   break;
+        case 0xd4: printf("ATN(");
+                   break;
+        case 0xd5: printf("EXP(");
+                   break;
+        case 0xd6: printf("INT(");
+                   break;
+        case 0xd7: printf("LOG(");
+                   break;
+        case 0xd8: printf("LN(");
+                   break;
+        case 0xd9: printf("ABS(");
+                   break;
+        case 0xda: printf("SGN(");
+                   break;
+        case 0xdb: printf("SQR(");
+                   break;
+        default:   mzascii2utf8(body[i]);
+                   break;
+      }
+    }
+  }
+
+  printf("\n");
 }
 
 uint16_t process_mzf_header(FILE *fp, char *mzf)
 {
-  uint8_t header[MZFHEADERSIZE];
   uint16_t i;
 
   /* Read and store tape header */
@@ -120,7 +370,7 @@ uint16_t process_mzf_header(FILE *fp, char *mzf)
   i=1;
   printf("File name: ");
   while ((header[i] != 0x0d) && (i<18)) {
-    printf("%c",mzascii2ascii(header[i]));
+    mzascii2utf8(header[i]);
     ++i;
   }
 
@@ -153,8 +403,8 @@ void process_mzf_body(FILE *fp, uint16_t fs)
   int32_t i;
   uint8_t body[fs];
 
-  printf("\nFile body in hexadecimal and ASCII\n");
-  printf("----------------------------------\n\n");
+  printf("\nFile body in hexadecimal and UTF-8\n");
+  printf("---------------------------------\n\n");
   for (i=0;i<fs;i++)
     body[i]=getc(fp);
 
@@ -163,7 +413,7 @@ void process_mzf_body(FILE *fp, uint16_t fs)
     if ((i+1)%DISPLAYLEN==0) {
       printf("    ");
       for (uint8_t j=DISPLAYLEN;j>0;j--) 
-        printf("%c",mzascii2ascii(body[(i-j)+1]));
+        mzascii2utf8(body[(i-j)+1]);
       printf("\n");
     }
   }
@@ -176,8 +426,12 @@ void process_mzf_body(FILE *fp, uint16_t fs)
       --i;
     printf("    ");
     for (j=i;j<fs;j++)
-      printf("%c",mzascii2ascii(body[j]));
+      mzascii2utf8(body[j]);
   }
+
+  /* Convert BASIC tokens and print file again if the file type is 0x02 */
+  if (header[0]==0x02)
+    print5025(body,fs);
 
   printf("\n");
   return;
