@@ -86,11 +86,21 @@ void mzascii2utf8(uint8_t sharpchar)
                  break;
       case 0x5f: printf("\u2190"); // leftwards arrow
                  break;
+      case 0x70: printf("\u2593"); // block dark shade (75%)
+                 break;
       case 0x7b: printf("\u00b0"); // degree symbol
+                 break;
+      case 0x81: printf("\u253c"); // box drawing vert and horiz
+                 break;
+      case 0xa8: printf("\u00d6"); // O+umlaut
                  break;
       case 0xad: printf("\u00fc"); // u+umlaut 
                  break;
       case 0xae: printf("\u00df"); // eszet
+                 break;
+      case 0xb2: printf("\u00dc"); // U+umlaut
+                 break;
+      case 0xb9: printf("\u00c4"); // A+umlaut
                  break;
       case 0xba: printf("\u00f6"); // o+umlaut
                  break;
@@ -98,11 +108,57 @@ void mzascii2utf8(uint8_t sharpchar)
                  break;
       case 0xbe: printf("\u00a5"); // yen
                  break;
+      case 0xc1: printf("\u2590"); // right half block;
+                 break;
+      case 0xc2: printf("\u2584"); // lower half block
+                 break;
       case 0xc6: printf("\u2192"); // rightwards arrow
+                 break;
+      case 0xc8: printf("\u2588"); // full block
+                 break;
+      case 0xc9: printf("\u25e4"); // filled upper left triangle
+                 break;
+      case 0xcb: printf("\u251c"); // box drawing vertical + right horizontal
+                 break;
+      case 0xcc: printf("\u25d8"); // inverse bullet
+                 break;
+      case 0xcd: printf("\u2514"); // box drawing upper right quadrant
+                 break;
+      case 0xce: printf("\u2510"); // box drawing lower left quadrant
+                 break;
+      case 0xd0: printf("\u250c"); // box drawing lower right quadrant
+                 break; 
+      case 0xd1: printf("\u2534"); // box drawing horiz + upper vertical
+                 break;
+      case 0xd2: printf("\u252c"); // box drawing horiz + lower vertical
+                 break;
+      case 0xd3: printf("\u2524"); // box drawing vertical + left horizontal
+                 break;
+      case 0xd5: printf("\u258c"); // left half block
+                 break;
+      case 0xdd: printf("\u2518"); // box drawing upper left quadrant
+                 break;
+      case 0xde: printf("\u259e"); // quadrant upper right and lower left
+                 break;
+      case 0xdf: printf("\u259a"); // quadrant upper left and lower right
                  break;
       case 0xe1: printf("\u2660"); // spade
                  break;
+      case 0xe9: printf("\u25e3"); // filled lower left triangle
+                 break;
+      case 0xee: printf("\u2572"); // box drawing ul to lr diagonal
+                 break;
+      case 0xef: printf("\u2571"); // box drawing ur to ll diagonal
+                 break;
+      case 0xf1: printf("\u25cf"); // filled circle
+                 break;
       case 0xf3: printf("\u2665"); // heart
+                 break;
+      case 0xf5: printf("\u25e2"); // filled lower right triangle
+                 break;
+      case 0xf6: printf("\u2573"); // box drawing diagonal cross
+                 break;
+      case 0xf7: printf("\u25cb"); // circle
                  break;
       case 0xf8: printf("\u2663"); // club
                  break;
@@ -112,16 +168,26 @@ void mzascii2utf8(uint8_t sharpchar)
                  break;
       case 0xfc: printf("\u2193"); // downwards arrow
                  break;
+      case 0xfe: printf("\u25e5"); // filled upper right triangle
+                 break;
       case 0xff: printf("\u03c0"); // pi
                  break;
 
       /* Clear, Home, arrow keys */
-      case 0x11: printf("\u21a1"); // cursor down
+      case 0x11: printf("\u2b07"); // cursor down
                  break;
-      case 0x16: printf("\u239a"); // clear screen
+      case 0x12: printf("\u2b06"); // cursor up
+                 break;
+      case 0x13: printf("\u2b95"); // cursor right
+                 break;
+      case 0x14: printf("\u2b05"); // cursor left
+                 break;
+      case 0x15: printf("\u24bd"); // cursor home (circled H)
+                 break;
+      case 0x16: printf("\u24b8"); // clear screen (circled C)
                  break;
 
-      /* For other control codes 0x00 - 0x1f */
+      /* For other Sharp ASCII codes */
       default:   printf("~");
                  break;
     }
