@@ -1,10 +1,12 @@
-/***********************************************/
-/* mzfview - a program to view Sharp MZ series */
-/*           digital (mzf,m12,mzt) tape files  */
-/*                                             */
-/*           (c) Tim Holyoake, February 2025   */
-/*                                             */
-/***********************************************/
+/**************************************************/
+/* mzfview.c                                      */
+/*                                                */
+/* Utility to view Sharp MZ series digital tape   */
+/* files (mzf, m12, mzt)                          */
+/*                                                */
+/* Tim Holyoake, 21st February 2025.              */
+/* MIT licence - see end of file for details.     */
+/**************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -80,19 +82,53 @@ void mzascii2utf8(uint8_t sharpchar)
       case 0xa2: printf("z"); //z
                  break;
 
-      /* Other stuff - mostly graphics */
+      /* Other stuff - mostly graphics - currently incomplete.  */
+      /* Unicode legacy computing extensions are new and remain */
+      /* unimplemented in commonly available fonts.             */
 
       case 0x5e: printf("\u2191"); // upwards arrow 
                  break;
       case 0x5f: printf("\u2190"); // leftwards arrow
                  break;
-      case 0x70: printf("\u2593"); // block dark shade (75%)
+      case 0x60: printf("\u1cc4b"); // ufo - legacy comp ext.
                  break;
+      case 0x61: printf("\u1cc01"); // car right - lce
+                 break;
+      case 0x62: printf("\u1cc00"); // car up - lce
+                 break;
+      case 0x64: printf("\u1cc02"); // person left - lce
+                 break;
+      case 0x65: printf("\u1cc03"); // person right - lce
+                 break;
+      case 0x66: printf("\u1cc04"); // person down - lce
+                 break;
+      case 0x6a: printf("\u1cc0f"); // diode right - lce
+                 break;
+      case 0x6b: printf("\u1cc0e"); // diode left - lce
+                 break;
+      case 0x6c: printf("\u1cc10"); // NPN transistor - lce
+                 break;
+      case 0x6d: printf("\u1cc11"); // PNP transistor - lce
+                 break;
+      case 0x6e: printf("\u1cc13"); // capacitor horiz - lce
+                 break;
+      case 0x6f: printf("\u1cc14"); // capacitor vert - lce
+                 break;
+      case 0x70: printf("\u2593"); // chequerboard is \u2427 - using \u2593 for
+                 break;            // better coverage
       case 0x7b: printf("\u00b0"); // degree symbol
                  break;
       case 0x81: printf("\u253c"); // box drawing vert and horiz
                  break;
       case 0xa8: printf("\u00d6"); // O+umlaut
+                 break;
+      case 0x91: printf("\u2317"); // hatching
+                 break;
+      case 0x93: printf("\u2317"); // hatching
+                 break;
+      case 0x94: printf("\u2317"); // hatching
+                 break;
+      case 0x95: printf("\u2317"); // hatching
                  break;
       case 0xad: printf("\u00fc"); // u+umlaut 
                  break;
@@ -108,11 +144,19 @@ void mzascii2utf8(uint8_t sharpchar)
                  break;
       case 0xbe: printf("\u00a5"); // yen
                  break;
-      case 0xc1: printf("\u2590"); // right half block;
+      case 0xc1: printf("\u2590"); // right half block
                  break;
       case 0xc2: printf("\u2584"); // lower half block
                  break;
+      case 0xc3: printf("\u2594"); // upper 1/8th block
+                 break;
+      case 0xc4: printf("\u2581"); // lower 1/8th block
+                 break;
+      case 0xc5: printf("\u258f"); // left 1/8th block
+                 break;
       case 0xc6: printf("\u2192"); // rightwards arrow
+                 break;
+      case 0xc7: printf("\u2595"); // right 1/8th block
                  break;
       case 0xc8: printf("\u2588"); // full block
                  break;
@@ -174,21 +218,21 @@ void mzascii2utf8(uint8_t sharpchar)
                  break;
 
       /* Clear, Home, arrow keys */
-      case 0x11: printf("\u2b07"); // cursor down
+      case 0x11: printf("\u2357"); // cursor down
                  break;
-      case 0x12: printf("\u2b06"); // cursor up
+      case 0x12: printf("\u2350"); // cursor up
                  break;
-      case 0x13: printf("\u2b95"); // cursor right
+      case 0x13: printf("\u2348"); // cursor right
                  break;
-      case 0x14: printf("\u2b05"); // cursor left
+      case 0x14: printf("\u2347"); // cursor left
                  break;
       case 0x15: printf("\u24bd"); // cursor home (circled H)
                  break;
       case 0x16: printf("\u24b8"); // clear screen (circled C)
                  break;
 
-      /* For other Sharp ASCII codes */
-      default:   printf("~");
+      /* For all other Sharp ASCII codes use this */
+      default:   printf("\u2301");
                  break;
     }
 
@@ -535,3 +579,25 @@ int main(int argc, char **argv)
 
   return (0);
 }
+
+//MIT License
+
+//Copyright (c) 2025 Tim Holyoake
+
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
