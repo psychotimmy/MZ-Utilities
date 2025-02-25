@@ -1,7 +1,7 @@
 # MZ-Utilities
 Utility programs to help with Sharp MZ series emulators and preservation activities.
 
-To compile: cc -o \<executable name\> \<source\>.c
+To compile: cc -o \<executable name\> \<source\>.c -lm
 
 **cgromchars \<Sharp MZ series CGROM file\>** - Print all of the 256 display characters in a 2K Sharp MZ series CGROM file.
 
