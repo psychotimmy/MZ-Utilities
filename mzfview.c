@@ -460,6 +460,238 @@ void print5025(uint8_t *body, uint16_t fs)
   printf("\n");
 }
 
+void print5510(uint8_t *body, uint16_t fs)
+{
+  bool instr=false;
+  bool inrem=false;
+  uint8_t licount=0;
+  uint8_t linum[4];
+
+  printf("\n\n");
+
+  for (int32_t i=0;i<fs;i++) {
+    /* BASIC SA-5510 lines are terminated by 0x0d */
+    if ((body[i]==0x0d)&&(licount==4)) {
+      licount=0;
+      instr=false;
+      inrem=false;
+      printf("\n");
+    }
+    else if (instr) {
+      mzascii2utf8(body[i]);
+      if (body[i]==0x22)
+        instr=false;
+    }
+    else if (inrem) {
+      mzascii2utf8(body[i]);
+      if (body[i]==0x3a)      // :
+        inrem=false;
+    }
+    else if (licount < 4) {
+      linum[licount++]=body[i];
+      if (licount == 4) {
+        uint16_t linenumber=((linum[3]<<8)|linum[2])&0xffff;
+        printf(" %d ",linenumber);
+      }
+    }
+    else {
+      switch(body[i]) {
+        case 0x80: /* Two byte token found */
+                   switch(body[++i]) {
+                     case 0x80: printf("REM");
+                                inrem=true;
+                                break;
+                     case 0x81: printf("DATA");
+                                break;
+                     case 0x84: printf("READ");
+                                break;
+                     case 0x85: printf("LIST");
+                                break;
+                     case 0x86: printf("RUN");
+                                break;
+                     case 0x87: printf("NEW");
+                                break;
+                     case 0x88: printf("PRINT");
+                                break;
+                     case 0x89: printf("LET");
+                                break;
+                     case 0x8a: printf("FOR");
+                                break;
+                     case 0x8b: printf("IF");
+                                break;
+                     case 0x8c: printf("THEN");
+                                break;
+                     case 0x8d: printf("GOTO");
+                                break;
+                     case 0x8e: printf("GOSUB");
+                                break;
+                     case 0x8f: printf("RETURN");
+                                break;
+                     case 0x90: printf("NEXT");
+                                break;
+                     case 0x91: printf("STOP");
+                                break;
+                     case 0x92: printf("END");
+                                break;
+                     case 0x94: printf("ON");
+                                break;
+                     case 0x95: printf("LOAD");
+                                break;
+                     case 0x96: printf("SAVE");
+                                break;
+                     case 0x97: printf("VERIFY");
+                                break;
+                     case 0x98: printf("POKE");
+                                break;
+                     case 0x99: printf("DIM");
+                                break;
+                     case 0x9a: printf("DEF FN");
+                                break;
+                     case 0x9b: printf("INPUT");
+                                break;
+                     case 0x9c: printf("RESTORE");
+                                break;
+                     case 0x9d: printf("CLR");
+                                break;
+                     case 0x9e: printf("MUSIC");
+                                break;
+                     case 0x9f: printf("TEMPO");
+                                break;
+                     case 0xa0: printf("USR(");
+                                break;
+                     case 0xa1: printf("WOPEN");
+                                break;
+                     case 0xa2: printf("ROPEN");
+                                break;
+                     case 0xa3: printf("CLOSE");
+                                break;
+                     case 0xa4: printf("MON");
+                                break;
+                     case 0xa5: printf("LIMIT");
+                                break;
+                     case 0xa6: printf("CONT");
+                                break;
+                     case 0xa7: printf("GET");
+                                break;
+                     case 0xa8: printf("INP@");
+                                break;
+                     case 0xa9: printf("OUT@");
+                                break;
+                     case 0xaa: printf("CURSOR");
+                                break;
+                     case 0xab: printf("SET");
+                                break;
+                     case 0xac: printf("RESET");
+                                break;
+                     case 0xb3: printf("AUTO");
+                                break;
+                     case 0xb6: printf("COPY/P");
+                                break;
+                     case 0xb7: printf("PAGE/P");
+                                break;
+                     default:   break;
+                   }
+                   break;
+                   /* Single byte tokens */
+        case 0x22: instr=true;
+                   printf("%c",body[i]);
+                   break;
+        case 0x2a: printf("*");
+                   break;
+        case 0x2b: printf("+");
+                   break;
+        case 0x2d: printf("-");
+                   break;
+        case 0x2f: printf("/");
+                   break;
+        case 0x5e: printf("\u2191"); // up arrow = exponentiation
+                   break;
+        case 0x83: printf("><");
+                   break;
+        case 0x84: printf("<>");
+                   break;
+        case 0x85: printf("=<");
+                   break;
+        case 0x86: printf("<=");
+                   break;
+        case 0x87: printf("=>");
+                   break;
+        case 0x88: printf(">=");
+                   break;
+        case 0x89: printf("=");
+                   break;
+        case 0x8a: printf(">");
+                   break;
+        case 0x8b: printf("<");
+                   break;
+        case 0x9e: printf("TO");
+                   break;
+        case 0x9f: printf("STEP");
+                   break;
+        case 0xa0: printf("LEFT$(");
+                   break;
+        case 0xa1: printf("RIGHT$(");
+                   break;
+        case 0xa2: printf("MID$(");
+                   break;
+        case 0xa3: printf("LEN(");
+                   break;
+        case 0xa4: printf("CHR$");
+                   break;
+        case 0xa5: printf("STR$(");
+                   break;
+        case 0xa6: printf("ASC(");
+                   break;
+        case 0xa7: printf("VAL(");
+                   break;
+        case 0xa8: printf("PEEK(");
+                   break;
+        case 0xa9: printf("TAB(");
+                   break;
+        case 0xaa: printf("SPACE$(");
+                   break;
+        case 0xab: printf("SIZE");
+                   break;
+        case 0xaf: printf("STRING$(");
+                   break;
+        case 0xb1: printf("CHARACTER$(");
+                   break;
+        case 0xb2: printf("CSR");
+                   break;
+        case 0xc0: printf("RND(");
+                   break;
+        case 0xc1: printf("SIN(");
+                   break;
+        case 0xc2: printf("COS(");
+                   break;
+        case 0xc3: printf("TAN(");
+                   break;
+        case 0xc4: printf("ATN(");
+                   break;
+        case 0xc5: printf("EXP(");
+                   break;
+        case 0xc6: printf("INT(");
+                   break;
+        case 0xc7: printf("LOG(");
+                   break;
+        case 0xc8: printf("LN(");
+                   break;
+        case 0xc9: printf("ABS(");
+                   break;
+        case 0xca: printf("SGN(");
+                   break;
+        case 0xcb: printf("SQR(");
+                   break;
+        default:   /* Not a token - use as a literal value */
+                   mzascii2utf8(body[i]);
+                   break;
+      }
+    }
+  }
+
+  printf("\n");
+}
+
 void printsbasic(uint8_t *body, uint16_t fs)
 {
   bool instr=false;
@@ -953,12 +1185,21 @@ void process_mzf_body(FILE *fp, uint16_t fs)
       mzascii2utf8(body[j]);
   }
 
-  /* Convert BASIC tokens and print file again if the file type is 0x02 */
-  if (header[0]==0x02)
+  /* Convert SP-BASIC tokens and print file again if the file type is 0x02 */
+  /* SP-5025 BASIC programs are loaded from 0x4806 onwards                 */
+  if ((header[0]==0x02) && (header[20]==0x06) && (header[21]==0x48))
     print5025(body,fs);
 
+  /* Convert SA-BASIC tokens and print file again if the file type is 0x02 */
+  /* SA-5510 BASIC programs are loaded from 0x505C onwards                 */
+  else if ((header[0]==0x02) && (header[20]==0x5C) && (header[21]==0x50))
+    print5510(body,fs);
+
+  else if ((header[0]==0x02))
+    printf("\n\nUnable to determine BASIC (?) type from file header\n");
+
   /* Convert S-BASIC tokens and print file again if the file type is 0x05 */
-  if (header[0]==0x05)
+  else if (header[0]==0x05)
     printsbasic(body,fs);
 
   printf("\n");
