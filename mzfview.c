@@ -495,17 +495,18 @@ void printsbasic(uint8_t *body, uint16_t fs)
       }
     }
     else {
+      uint8_t leng;
       switch(body[i]) {
         case 0x03: /* String variable - length of name in next byte */
-                   uint8_t length=body[++i];
+                   leng=body[++i];
                    /* Output string variable name */
-                   for (uint8_t j=0;j<length;j++)
+                   for (uint8_t j=0;j<leng;j++)
                       printf("%c",body[++i]);
                    /* Output a $ symbol */
                    printf("$");
                    break;
         case 0x05: /* Numeric variable - length of name in next byte */
-                   uint8_t leng=body[++i];
+                   leng=body[++i];
                    int exponent, mantissa;
                    /* Output numeric variable name */
                    for (uint8_t j=0;j<leng;j++)
@@ -523,12 +524,12 @@ void printsbasic(uint8_t *body, uint16_t fs)
                    /* Deal with the sign of the mantissa in msb */
                    if (bits & 0x80)
                      positivemantissa=false;
-                   bits=bits<<1;
+                   bits<<=1;
                    /* Deal with the remaining 7 bits */
                    for (uint8_t k=2;k<=8;k++) {
                      if (bits & 0x80)
                        value += powf(2,-k);
-                     bits=bits<<1;
+                     bits<<=1;
                    }
                    /* Deal with the remaining 3 bytes */
                    for (uint8_t j=1;j<=3;j++) {
@@ -536,23 +537,19 @@ void printsbasic(uint8_t *body, uint16_t fs)
                      for (uint8_t k=1;k<=8;k++) {
                        if (bits & 0x80)
                          value += powf(2,-(j*8+k));
-                       bits=bits<<1;
+                       bits<<=1;
                      }
                    }
                    /* Multiply by the exponent and print if not 0 */
-                   if (exponent == 0)
+                   if (exponent == 0)     // S-BASIC 0 indicator
                      printf("0");
                    else {
                      if (positivemantissa)
                        value *= powf(2,exponent);
                      else
                        value *= powf(2,-1*exponent);
-                     /* Check if we have an integer */
-                     if (floorf(value) == value)
-                       printf("%d",(int)value);
-                     else
-                       printf("%f",value);
-                   }
+                     printf("%g",value);  // %g removes trailing zeros
+                   }                      // after the decimal point
                    break;
         case 0x11: /* Hex value */
                    if (body[i+2] != 0x00)
