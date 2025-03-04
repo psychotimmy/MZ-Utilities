@@ -1,25 +1,37 @@
-/**************************************************/
-/* mzfview.c                                      */
-/*                                                */
-/* Utility to view Sharp MZ series digital tape   */
-/* files (mzf, m12, mzt)                          */
-/*                                                */
-/* Tim Holyoake, 21st February 2025.              */
-/* MIT licence - see end of file for details.     */
-/**************************************************/
+/***************************************************/
+/* mzfview.c                                       */
+/*                                                 */
+/* Utility to view Sharp MZ series digital tape    */
+/* files (mzf, m12, mzt).                          */
+/*                                                 */
+/* Relies on the mz-ascii.ttf being active in the  */
+/* terminal running the program.                   */
+/*                                                 */
+/* (c) Tim Holyoake, February-March 2025.          */
+/*                                                 */
+/* MIT licence - see end of this file for details. */
+/*                                                 */
+/***************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <locale.h>
+#include <wchar.h>
 #include <math.h>
 
-#define MZFHEADERSIZE 128         /* Size of a .mzf file header in bytes */
-#define DISPLAYLEN     16
+#define MZFHEADERSIZE 128      // Size of a .mzf file header in bytes
+#define DISPLAYLEN     16      // Number of bytes to display per hex row
 
-uint8_t header[MZFHEADERSIZE];    /* Store header globally */
+#define MZ80K 1                // Code numbers used for different MZ
+#define MZ80A 2                // series machine types
+#define MZ700 3
 
-/* Print Sharp 'ASCII' to stdout */
+uint8_t header[MZFHEADERSIZE]; // Store header as a global variable
+uint8_t mzmc;                  // MZ machine type
+
+/* Print Sharp 'ASCII' to stdout. Requires mz-ascii.ttf to be active */
 void mzascii2utf8(uint8_t sharpchar)
 {
   if ((sharpchar >= 0x20) && (sharpchar <= 0x5d))
@@ -83,159 +95,37 @@ void mzascii2utf8(uint8_t sharpchar)
       case 0xa2: printf("z"); //z
                  break;
 
-      /* Other stuff - mostly graphics - currently incomplete.  */
-      /* Unicode legacy computing extensions are new and remain */
-      /* unimplemented in commonly available fonts.             */
+      /* Other stuff is in the Unicode private area 1 at E000 onwards   */
+      /* and in private area 2 at F000 onwards for variants from MZ-80K */
+      /* ASCII table on the MZ80A and MZ-700 */
+      /* Done to make the default printf statement easy ...             */
 
-      case 0x5e: printf("\u2191"); // upwards arrow 
-                 break;
-      case 0x5f: printf("\u2190"); // leftwards arrow
-                 break;
-      case 0x60: printf("\u1cc4b"); // ufo - legacy comp ext.
-                 break;
-      case 0x61: printf("\u1cc01"); // car right - lce
-                 break;
-      case 0x62: printf("\u1cc00"); // car up - lce
-                 break;
-      case 0x63: printf("\u1fbc5"); // person - lce
-                 break;
-      case 0x64: printf("\u1cc02"); // person left - lce
-                 break;
-      case 0x65: printf("\u1cc03"); // person right - lce
-                 break;
-      case 0x66: printf("\u1cc04"); // person down - lce
-                 break;
-      case 0x6a: printf("\u1cc0f"); // diode right - lce
-                 break;
-      case 0x6b: printf("\u1cc0e"); // diode left - lce
-                 break;
-      case 0x6c: printf("\u1cc10"); // NPN transistor - lce
-                 break;
-      case 0x6d: printf("\u1cc11"); // PNP transistor - lce
-                 break;
-      case 0x6e: printf("\u1cc13"); // capacitor horiz - lce
-                 break;
-      case 0x6f: printf("\u1cc14"); // capacitor vert - lce
-                 break;
-      case 0x70: printf("\u2593"); // chequerboard is \u2427 - using \u2593 for
-                 break;            // better coverage
-      case 0x7b: printf("\u00b0"); // degree symbol
-                 break;
-      case 0x81: printf("\u253c"); // box drawing vert and horiz
-                 break;
-      case 0xa8: printf("\u00d6"); // O+umlaut
-                 break;
-      case 0x91: printf("\u2317"); // hatching
-                 break;
-      case 0x93: printf("\u2317"); // hatching
-                 break;
-      case 0x94: printf("\u2317"); // hatching
-                 break;
-      case 0x95: printf("\u2317"); // hatching
-                 break;
-      case 0xad: printf("\u00fc"); // u+umlaut 
-                 break;
-      case 0xae: printf("\u00df"); // eszet
-                 break;
-      case 0xb2: printf("\u00dc"); // U+umlaut
-                 break;
-      case 0xb9: printf("\u00c4"); // A+umlaut
-                 break;
-      case 0xba: printf("\u00f6"); // o+umlaut
-                 break;
-      case 0xbb: printf("\u00e4"); // a+umlaut
-                 break;
-      case 0xbe: printf("\u00a5"); // yen
-                 break;
-      case 0xc1: printf("\u2590"); // right half block
-                 break;
-      case 0xc2: printf("\u2584"); // lower half block
-                 break;
-      case 0xc3: printf("\u2594"); // upper 1/8th block
-                 break;
-      case 0xc4: printf("\u2581"); // lower 1/8th block
-                 break;
-      case 0xc5: printf("\u258f"); // left 1/8th block
-                 break;
-      case 0xc6: printf("\u2192"); // rightwards arrow
-                 break;
-      case 0xc7: printf("\u2595"); // right 1/8th block
-                 break;
-      case 0xc8: printf("\u2588"); // full block
-                 break;
-      case 0xc9: printf("\u25e4"); // filled upper left triangle
-                 break;
-      case 0xcb: printf("\u251c"); // box drawing vertical + right horizontal
-                 break;
-      case 0xcc: printf("\u25d8"); // inverse bullet
-                 break;
-      case 0xcd: printf("\u2514"); // box drawing upper right quadrant
-                 break;
-      case 0xce: printf("\u2510"); // box drawing lower left quadrant
-                 break;
-      case 0xd0: printf("\u250c"); // box drawing lower right quadrant
-                 break; 
-      case 0xd1: printf("\u2534"); // box drawing horiz + upper vertical
-                 break;
-      case 0xd2: printf("\u252c"); // box drawing horiz + lower vertical
-                 break;
-      case 0xd3: printf("\u2524"); // box drawing vertical + left horizontal
-                 break;
-      case 0xd5: printf("\u258c"); // left half block
-                 break;
-      case 0xdd: printf("\u2518"); // box drawing upper left quadrant
-                 break;
-      case 0xde: printf("\u259e"); // quadrant upper right and lower left
-                 break;
-      case 0xdf: printf("\u259a"); // quadrant upper left and lower right
-                 break;
-      case 0xe1: printf("\u2660"); // spade
-                 break;
-      case 0xe9: printf("\u25e3"); // filled lower left triangle
-                 break;
-      case 0xee: printf("\u2572"); // box drawing ul to lr diagonal
-                 break;
-      case 0xef: printf("\u2571"); // box drawing ur to ll diagonal
-                 break;
-      case 0xf1: printf("\u25cf"); // filled circle
-                 break;
-      case 0xf3: printf("\u2665"); // heart
-                 break;
-      case 0xf5: printf("\u25e2"); // filled lower right triangle
-                 break;
-      case 0xf6: printf("\u2573"); // box drawing diagonal cross
-                 break;
-      case 0xf7: printf("\u25cb"); // circle
-                 break;
-      case 0xf8: printf("\u2663"); // club
-                 break;
-      case 0xfa: printf("\u2666"); // diamond
-                 break;
-      case 0xfb: printf("£");      // £
-                 break;
-      case 0xfc: printf("\u2193"); // downwards arrow
-                 break;
-      case 0xfe: printf("\u25e5"); // filled upper right triangle
-                 break;
-      case 0xff: printf("\u03c0"); // pi
-                 break;
-
-      /* Clear, Home, arrow keys */
-      case 0x11: printf("\u2357"); // cursor down
-                 break;
-      case 0x12: printf("\u2350"); // cursor up
-                 break;
-      case 0x13: printf("\u2348"); // cursor right
-                 break;
-      case 0x14: printf("\u2347"); // cursor left
-                 break;
-      case 0x15: printf("\u24bd"); // cursor home (circled H)
-                 break;
-      case 0x16: printf("\u24b8"); // clear screen (circled C)
-                 break;
-
-      /* For all other Sharp ASCII codes use this */
-      default:   printf("\u2301");
+      default:   wchar_t tstr;
+                 if (mzmc == MZ80A) {
+                   if ((sharpchar == 0x80) ||
+                       (sharpchar == 0x8b) ||
+                       (sharpchar == 0x90) ||
+                       (sharpchar == 0x93) ||
+                       (sharpchar == 0x94) ||
+                       (sharpchar == 0xbe)) 
+                     tstr=0xF000+sharpchar;
+                    else
+                     tstr=0xE000+sharpchar;
+                 } else if (mzmc == MZ700) {
+                   if ((sharpchar == 0x6c) ||
+                       (sharpchar == 0x7f) ||
+                       (sharpchar == 0x80) ||
+                       (sharpchar == 0x8b) ||
+                       (sharpchar == 0x90) ||
+                       (sharpchar == 0x93) ||
+                       (sharpchar == 0x94) ||
+                       (sharpchar == 0xbe)) 
+                     tstr=0xF000+sharpchar;
+                    else
+                     tstr=0xE000+sharpchar;
+                 } else
+                     tstr=0xE000+sharpchar;
+                 printf("%lc",tstr);
                  break;
     }
 
@@ -1164,20 +1054,26 @@ void process_mzf_body(FILE *fp, uint16_t fs)
 
   /* Convert SP-BASIC tokens and print file again if the file type is 0x02 */
   /* SP-5025 BASIC programs are loaded from 0x4806 onwards                 */
-  if ((header[0]==0x02) && (header[20]==0x06) && (header[21]==0x48))
+  if ((header[0]==0x02) && (header[20]==0x06) && (header[21]==0x48)) {
+    mzmc=MZ80K;
     print5025(body,fs);
+  }
 
   /* Convert SA-BASIC tokens and print file again if the file type is 0x02 */
   /* SA-5510 BASIC programs are loaded from 0x505C onwards                 */
-  else if ((header[0]==0x02) && (header[20]==0x5C) && (header[21]==0x50))
+  else if ((header[0]==0x02) && (header[20]==0x5C) && (header[21]==0x50)) {
+    mzmc=MZ80A;
     print5510(body,fs);
+  }
 
   else if ((header[0]==0x02))
     printf("\n\nUnable to determine BASIC (?) type from file header\n");
 
   /* Convert S-BASIC tokens and print file again if the file type is 0x05 */
-  else if (header[0]==0x05)
+  else if (header[0]==0x05) {
+    mzmc=MZ700;
     printsbasic(body,fs);
+  }
 
   printf("\n");
   return;
@@ -1188,6 +1084,9 @@ int main(int argc, char **argv)
 
   FILE *fp;
   uint16_t filesize;
+
+  /* Set locale */
+  setlocale(LC_CTYPE, "");
 
   /* Check we have one and only one argument */
   if (argc !=2) {
