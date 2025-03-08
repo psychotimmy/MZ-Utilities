@@ -314,7 +314,7 @@ void print5025(uint8_t *body, uint16_t fs)
                    break;
         case 0xcb: printf("SIZE");
                    break;
-        case 0xcf: printf("\u2191"); // up arrow = exponentiation
+        case 0xcf: printf("\ue05e"); // up arrow = exponentiation
                    break;
         case 0xd0: printf("RND(");
                    break;
@@ -494,7 +494,7 @@ void print5510(uint8_t *body, uint16_t fs)
                    break;
         case 0x2f: printf("/");
                    break;
-        case 0x5e: printf("\u2191"); // up arrow = exponentiation
+        case 0x5e: printf("\ue05e"); // up arrow = exponentiation
                    break;
         case 0x83: printf("><");
                    break;
@@ -828,7 +828,7 @@ void printsbasic(uint8_t *body, uint16_t fs)
                    break;
         case 0xe3: printf("USING");
                    break;
-        case 0xd2: printf("\u03c0"); // pi
+        case 0xd2: printf("\ue0ff"); // pi
                    break;
         case 0xee: printf("><");
                    break;
@@ -856,7 +856,7 @@ void printsbasic(uint8_t *body, uint16_t fs)
                    break;
         case 0xfc: printf("*");
                    break;
-        case 0xfd: printf("\u2191"); // up arrow = exponentiation
+        case 0xfd: printf("\ue05e"); // up arrow = exponentiation
                    break;
         case 0xfe: switch(body[++i]) {
                      case 0xae: printf("BOOT");
